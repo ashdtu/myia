@@ -34,13 +34,17 @@ class GraphCloner:
             through the graphs to clone, even if these graphs are
             not nested.
         clone_constants: Whether to clone Constant nodes.
+        relation: The relation the cloned nodes present with respect
+            to the originals, for debugging purposes. Default is
+            'copy'.
 
     """
 
     def __init__(self,
                  *graphs: Graph,
                  total: bool = False,
-                 clone_constants: bool = False) -> None:
+                 clone_constants: bool = False,
+                 relation: str = 'copy') -> None:
         """Initialize a GraphCloner."""
         self.todo: Set[Graph] = set()
         self.graph_mappings: Dict[Graph, Union[Graph, bool]] = {}
@@ -48,6 +52,7 @@ class GraphCloner:
                         Union[Graph, ANFNode]] = {None: None}
         self.total = total
         self.clone_constants = clone_constants
+        self.relation = relation
         for graph in graphs:
             self.add_clone(graph)
 
@@ -79,7 +84,7 @@ class GraphCloner:
             set_output = target_graph is None
 
         if target_graph is None:
-            with About(graph.debug, 'copy'):
+            with About(graph.debug, self.relation):
                 target_graph = Graph()
 
         self.repl[graph] = target_graph
@@ -160,7 +165,7 @@ class GraphCloner:
                 continue
 
             new: ANFNode
-            with About(node.debug, 'copy'):
+            with About(node.debug, self.relation):
                 if is_parameter(node):
                     new = Parameter(g)
                 elif is_constant(node):
